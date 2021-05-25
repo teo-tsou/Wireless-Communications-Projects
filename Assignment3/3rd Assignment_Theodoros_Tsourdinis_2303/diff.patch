@@ -1,0 +1,111 @@
+18a19,22
+> struct timespec start,now;
+> int flag = 0;
+> int start_flag = 0;
+> struct ieee80211_vif *ieee_vif;
+27a32
+> 
+124c129
+< 
+---
+> 	
+387a393,394
+> 
+> 
+397c404,424
+< 
+---
+> 	int b = 1;
+> 	
+> 	
+> 	getnstimeofday(&now); 
+> 	
+> 	if((now.tv_sec - start.tv_sec >= 60) && (flag == 0)) {
+> 		printk("60 seconds passed");
+> 		start_flag = 1;
+> 		getnstimeofday(&now);
+> 		ath9k_beacon_config(sc,ieee_vif,b);
+> 		getnstimeofday(&start);
+> 		flag = 1;
+> }
+> 	
+> 	else if((now.tv_sec - start.tv_sec >= 3) && (flag == 1)) {
+> 		printk("3 seconds passed");
+> 		ath9k_beacon_config(sc,ieee_vif,b);
+> 		getnstimeofday(&start);
+> }
+> 	
+> 	
+592c619,623
+< 
+---
+> 	
+> 	if(start_flag == 0){
+> 		getnstimeofday(&start);
+> 		
+> 		
+594a626,629
+> 	
+> 	if(cur_conf->beacon_interval-1 == 0){
+> 		cur_conf->beacon_interval = 2;
+> 	}
+596a632
+> 	printk("Beacon Interval is %ld",(long)cur_conf->beacon_interval);
+599a636
+> 	
+621a659,699
+> 		
+> 	}
+> 	
+> 
+> 	if(start_flag == 1){
+> 	ath_dbg(common, BEACON,
+> 		"Caching beacon data for BSS: %pM\n", bss_conf->bssid);
+> 	
+> 	if(cur_conf->beacon_interval-1 == 0){
+> 		cur_conf->beacon_interval = 2;
+> 	}
+> 	
+> 	cur_conf->beacon_interval = cur_conf->beacon_interval -1;
+> 	printk("Beacon Interval is %ld",(long)cur_conf->beacon_interval);
+> 	cur_conf->dtim_period = bss_conf->dtim_period;
+> 	cur_conf->dtim_count = 1;
+> 	cur_conf->ibss_creator = bss_conf->ibss_creator;
+> 	
+> 
+> 	/*
+> 	 * It looks like mac80211 may end up using beacon interval of zero in
+> 	 * some cases (at least for mesh point). Avoid getting into an
+> 	 * infinite loop by using a bit safer value instead. To be safe,
+> 	 * do sanity check on beacon interval for all operating modes.
+> 	 */
+> 	if (cur_conf->beacon_interval == 0)
+> 		cur_conf->beacon_interval = 100;
+> 
+> 	cur_conf->bmiss_timeout =
+> 		ATH_DEFAULT_BMISS_LIMIT * cur_conf->beacon_interval;
+> 
+> 	/*
+> 	 * We don't parse dtim period from mac80211 during the driver
+> 	 * initialization as it breaks association with hidden-ssid
+> 	 * AP and it causes latency in roaming
+> 	 */
+> 	if (cur_conf->dtim_period == 0)
+> 		cur_conf->dtim_period = 1;
+> 
+> 	ath9k_set_tsfadjust(sc, cur_conf);
+> }
+626a705
+> 
+635c714,715
+< 
+---
+> 	ieee_vif = main_vif;
+> 	
+698a779
+> 	
+701d781
+< 
+717a798,799
+> 
+> 
